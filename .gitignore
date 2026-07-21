@@ -1,0 +1,4 @@
+*.class
+*.jar
+reference-shortener
+!reference-shortener/

@@ -1,0 +1,8 @@
+{
+  "aliases": {
+    "reference-shortener": {
+      "script-ref": "ReferenceShortener.java",
+      "description": "Shortens a LaTeX paper's references (via latexmk) until it fits a page count"
+    }
+  }
+}

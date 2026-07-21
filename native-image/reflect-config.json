@@ -1,0 +1,8 @@
+[
+  {
+    "name": "org.tinylog.writers.ConsoleWriter",
+    "methods": [
+      { "name": "<init>", "parameterTypes": ["java.util.Map"] }
+    ]
+  }
+]
