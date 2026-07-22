@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Cross-platform native binaries (Linux, macOS, Windows) are built by CI with GraalVM `native-image` (via jbang) and uploaded as workflow artifacts; tag builds also attach them to the GitHub release.
+
 ## [0.1.0] - 2026-07-21
 
 ### Added

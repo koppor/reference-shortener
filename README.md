@@ -61,10 +61,15 @@ Two independent knobs, both optional:
 
 ## Native binary
 
-Build a standalone native executable from a checkout:
+Pre-built native binaries for Linux, macOS, and Windows are attached to each
+[release](https://github.com/koppor/reference-shortener/releases) and to every
+[Binaries workflow run](https://github.com/koppor/reference-shortener/actions/workflows/binaries.yml)
+(as artifacts) — download one and run it directly, no JBang or JVM required.
+
+To build one yourself from a checkout:
 
 ```bash
-jbang --native ReferenceShortener.java --version
+jbang export native --output reference-shortener ReferenceShortener.java
 ```
 
 ## Versioning

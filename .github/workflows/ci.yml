@@ -25,14 +25,5 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends latexmk texlive-latex-base
       - run: ./smoke-test.sh
 
-  native:
-    name: Native image
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: '25'
-          distribution: 'graalvm-community'
-      - uses: jbangdev/setup-jbang@main
-      - run: jbang --native ReferenceShortener.java --version
+  # The native image is built (and validated) by the dedicated "Binaries" workflow across all
+  # platforms, so there is no separate native job here.

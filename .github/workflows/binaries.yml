@@ -1,0 +1,58 @@
+name: Binaries
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write # needed to attach binaries to the release on tag builds
+
+jobs:
+  native:
+    name: ${{ matrix.asset }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # One platform failing must not stop the others from producing their binary.
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset: reference-shortener-linux-x64
+          - os: macos-latest
+            asset: reference-shortener-macos-arm64
+          - os: windows-latest
+            asset: reference-shortener-windows-x64.exe
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up GraalVM (native-image)
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm-community'
+
+      - uses: jbangdev/setup-jbang@main
+
+      # jbang builds the GraalVM native image from the script's //NATIVE_OPTIONS / //DEPS / //FILES
+      # directives and writes the executable to the given path.
+      - name: Build native binary
+        run: jbang export native --force --output ${{ matrix.asset }} ReferenceShortener.java
+
+      - name: Smoke-check the binary
+        run: ./${{ matrix.asset }} --version
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+          if-no-files-found: error
+
+      - name: Attach binary to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.asset }}
