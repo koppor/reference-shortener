@@ -67,7 +67,7 @@ import picocli.CommandLine.Parameters;
 /// latexmk after each and stopping as soon as the target is met. The referenced `.bib` file(s) are
 /// rewritten with the smallest set of cleanups that reaches the target.
 ///
-/// Standalone sibling of JabRef's `jabkit shorten`; built on jablib.
+/// Built on jablib, JabRef's core library.
 @Command(name = "reference-shortener",
         mixinStandardHelpOptions = true,
         // a plain version string (not an IVersionProvider) keeps the native image free of extra reflection
@@ -85,7 +85,7 @@ public class ReferenceShortener implements Callable<Integer> {
     Path outputFile;
 
     // getInstance() is deprecation-marked to restrict it to application entry points — which this is
-    // (same sanctioned usage as JabKitLauncher and the jablib-examples jbang scripts).
+    // (the same sanctioned usage as the jablib-examples jbang scripts).
     private final JabRefCliPreferences preferences = JabRefCliPreferences.getInstance();
 
     public static void main(String[] args) {
