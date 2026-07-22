@@ -36,6 +36,18 @@ Without `--pages`, the target is one page fewer than the paper's current length.
 `--output shortened.bib` writes the result elsewhere instead of overwriting (single-`.bib` papers
 only).
 
+## Use as an agent skill
+
+This repository ships a [`SKILL.md`](SKILL.md), so a coding agent can install it as a skill from
+[skills.sh](https://www.skills.sh/):
+
+```bash
+npx skills add koppor/reference-shortener
+```
+
+See the skill page at
+[skills.sh/koppor/reference-shortener](https://www.skills.sh/koppor/reference-shortener).
+
 ## Faster startup
 
 Two independent knobs, both optional:
