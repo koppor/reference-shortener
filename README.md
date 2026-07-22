@@ -36,13 +36,36 @@ Without `--pages`, the target is one page fewer than the paper's current length.
 `--output shortened.bib` writes the result elsewhere instead of overwriting (single-`.bib` papers
 only).
 
+## Faster startup
+
+Two independent knobs, both optional:
+
+- **Native jbang launcher** — run jbang itself as a native binary, skipping the JVM boot on every
+  invocation. Enable once (add to your shell profile):
+
+  ```bash
+  export JBANG_USE_NATIVE=true
+  ```
+
+  jbang downloads a native build of *itself* on the next run. This speeds up the `jbang` command in
+  general, not just this tool.
+
+- **Native build of this tool** — the biggest win for repeated use; runs without a JVM at all:
+
+  ```bash
+  jbang app install --native reference-shortener@koppor/reference-shortener
+  ```
+
+  Building natively requires a GraalVM JDK with `native-image`
+  (e.g. `JBANG_JDK_VENDOR=graalvm_community jbang jdk install 25`).
+
 ## Native binary
+
+Build a standalone native executable from a checkout:
 
 ```bash
 jbang --native ReferenceShortener.java --version
 ```
-
-Requires a GraalVM JDK with `native-image` (e.g. `JBANG_JDK_VENDOR=graalvm_community jbang jdk install 25`).
 
 ## Versioning
 
