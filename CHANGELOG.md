@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Colored terminal output (via [chalk](https://github.com/tomas-langer/chalk)): green for success, yellow for warnings, red for errors, dim for informational lines. Honors `NO_COLOR` and only colorizes a real terminal, so piped or redirected output stays plain.
 - Cross-platform native binaries (Linux, macOS, Windows) are built by CI with GraalVM `native-image` (via jbang) and uploaded as workflow artifacts; tag builds also attach them to the GitHub release.
 - As a very last resort — after author and journal shortening — DOIs are shortened to their `10/xxx` form via [shortdoi.org](https://shortdoi.org/). Not everyone wants short DOIs, so it runs only when nothing else reached the target, and is skipped gracefully when offline.
 

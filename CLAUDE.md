@@ -75,6 +75,10 @@ jbang export native --output reference-shortener ReferenceShortener.java
 ## Conventions
 
 - **English only** — no `Localization.lang`, no i18n.
+- **Colored output** uses [chalk](https://github.com/tomas-langer/chalk): `Chalk.on(msg).green()` etc.
+  Coloring is gated once in `main()` via `Chalk.setColorEnabled(NO_COLOR unset && System.console() != null)`
+  — chalk does not strip on its own, so keep new user messages wrapped in `Chalk.on(...)` and let that
+  switch handle piped/`NO_COLOR` output (green = success, yellow = warning, red = error, gray = info).
 - **SemVer**; `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/) and is
   heylogs-linted in CI.
 - Direct pushes to `main` (own repo, no PR flow). CI must stay **offline**.

@@ -17,6 +17,8 @@
 // -proc:full is required since JDK 23 disabled implicit annotation processing.
 //DEPS info.picocli:picocli-codegen:4.7.7
 //COMPILE_OPTIONS -proc:full
+// Colored terminal output; bundles jansi but builds and runs fine in the native image.
+//DEPS com.github.tomas-langer:chalk:1.0.2
 
 //NATIVE_OPTIONS --no-fallback --enable-url-protocols=https -H:IncludeResources=journals/.*|tinylog.properties
 
@@ -57,6 +59,7 @@ import org.jabref.model.entry.field.StandardField;
 import org.jabref.model.texparser.LatexParserResult;
 import org.jabref.model.util.DummyFileUpdateMonitor;
 
+import com.github.tomaslanger.chalk.Chalk;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -95,6 +98,9 @@ public class ReferenceShortener implements Callable<Integer> {
     private final JabRefCliPreferences preferences = JabRefCliPreferences.getInstance();
 
     public static void main(String[] args) {
+        // Chalk does not strip ANSI on its own, so decide here: honor NO_COLOR and only colorize a
+        // real terminal (System.console() is null when the output is piped or redirected).
+        Chalk.setColorEnabled(System.getenv("NO_COLOR") == null && System.console() != null);
         System.exit(new CommandLine(new ReferenceShortener()).execute(args));
     }
 
@@ -130,7 +136,7 @@ public class ReferenceShortener implements Callable<Integer> {
         try {
             return run();
         } catch (AbortException e) {
-            System.err.println(e.getMessage());
+            System.err.println(Chalk.on(e.getMessage()).red());
             return e.exitCode;
         }
     }
@@ -181,7 +187,7 @@ public class ReferenceShortener implements Callable<Integer> {
 
         LatexCompiler compiler = new LatexCompiler(workTex);
         if (compiler.usesDocker()) {
-            System.out.println("No local TeX found; compiling with the Island of TeX Docker image.");
+            System.out.println(Chalk.on("No local TeX found; compiling with the Island of TeX Docker image.").gray());
         }
 
         PageCounter measure = () -> {
@@ -246,13 +252,13 @@ public class ReferenceShortener implements Callable<Integer> {
         try {
             loadedBibs.forEach(bib -> bib.citedEntries().forEach(shortenDois::cleanup));
         } catch (Exception e) {
-            System.err.println("Warning: skipped DOI shortening (needs access to shortdoi.org): " + e.getMessage());
+            System.err.println(Chalk.on("Warning: skipped DOI shortening (needs access to shortdoi.org): " + e.getMessage()).yellow());
         }
     }
 
     private Integer report(Path workDir, List<LoadedBib> loadedBibs, Result result) throws AbortException {
         if (result.appliedSteps().isEmpty()) {
-            System.out.println("'%s' already fits within %d pages; nothing to shorten.".formatted(texFile, result.baselinePages()));
+            System.out.println(Chalk.on("'%s' already fits within %d pages; nothing to shorten.".formatted(texFile, result.baselinePages())).cyan());
             return CommandLine.ExitCode.OK;
         }
 
@@ -260,13 +266,13 @@ public class ReferenceShortener implements Callable<Integer> {
 
         String appliedSteps = String.join(", ", result.appliedSteps());
         if (result.reachedTarget()) {
-            System.out.println("Shortened '%s' from %d to %d pages by applying: %s.".formatted(
-                    texFile, result.baselinePages(), result.finalPages(), appliedSteps));
+            System.out.println(Chalk.on("Shortened '%s' from %d to %d pages by applying: %s.".formatted(
+                    texFile, result.baselinePages(), result.finalPages(), appliedSteps)).green());
             return CommandLine.ExitCode.OK;
         }
 
-        System.err.println("Could not reach the target of %d pages; best effort is %d pages after applying: %s.".formatted(
-                result.targetPages(), result.finalPages(), appliedSteps));
+        System.err.println(Chalk.on("Could not reach the target of %d pages; best effort is %d pages after applying: %s.".formatted(
+                result.targetPages(), result.finalPages(), appliedSteps)).yellow());
         return CommandLine.ExitCode.OK;
     }
 
@@ -279,7 +285,7 @@ public class ReferenceShortener implements Callable<Integer> {
                     ? outputFile
                     : resolveWriteBackDestination(sourceRoot, workDir, bib.stagedPath());
             saveDatabase(bib.database(), destination);
-            System.out.println("Saved " + destination);
+            System.out.println(Chalk.on("Saved " + destination).gray());
         }
     }
 
@@ -369,7 +375,7 @@ public class ReferenceShortener implements Callable<Integer> {
             // walk failure: reported via the existence warning below
         }
         if (Files.exists(directory)) {
-            System.err.println("Warning: could not fully remove staging directory " + directory);
+            System.err.println(Chalk.on("Warning: could not fully remove staging directory " + directory).yellow());
         }
     }
 
