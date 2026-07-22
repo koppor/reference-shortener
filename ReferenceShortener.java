@@ -62,10 +62,14 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 /// Shortens the reference list cited by a LaTeX document until the compiled paper reaches a target
-/// page count. Normalizes DOIs first (a cleanup any well-formed paper wants anyway), then applies
-/// information-reducing cleanups — author minification, then journal abbreviation — recompiling with
-/// latexmk after each and stopping as soon as the target is met. The referenced `.bib` file(s) are
-/// rewritten with the smallest set of cleanups that reaches the target.
+/// page count, recompiling with latexmk after each cleanup and stopping as soon as the target is met.
+/// Cleanups are applied in this order:
+///
+/// 1. Normalize DOIs — a cleanup any well-formed paper wants anyway, not an information-losing trade-off.
+/// 2. Minify author lists to the first author ("et al.").
+/// 3. Abbreviate journal names.
+///
+/// The referenced `.bib` file(s) are rewritten with the smallest set of cleanups that reaches the target.
 ///
 /// Built on jablib, JabRef's core library.
 @Command(name = "reference-shortener",
