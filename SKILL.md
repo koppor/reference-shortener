@@ -6,16 +6,15 @@ license: MIT
 
 # reference-shortener
 
-Compiles a LaTeX paper with `latexmk` and applies escalating, information-reducing cleanups to the
-cited references — recompiling after each step and stopping as soon as the paper fits the target
-page count. The referenced `.bib` file(s) are rewritten with the smallest set of cleanups that
-reaches the target.
+Compiles a LaTeX paper with `latexmk` and applies cleanups to the cited references — recompiling
+after each step and stopping as soon as the paper fits the target page count. The referenced `.bib`
+file(s) are rewritten with the smallest set of cleanups that reaches the target.
 
-Escalation order:
+Order:
 
-1. Shorten author lists to the first author + "and others" (rendered as "et al.")
-2. Abbreviate journal names (JabRef's bundled journal-abbreviation list)
-3. Normalize DOIs (strip `https://doi.org/` prefixes and similar)
+1. Normalize DOIs (strip `https://doi.org/` prefixes and similar) — a cleanup any well-formed paper wants anyway
+2. Shorten author lists to the first author + "and others" (rendered as "et al.")
+3. Abbreviate journal names (JabRef's bundled journal-abbreviation list)
 
 ## Installation
 

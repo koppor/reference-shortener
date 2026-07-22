@@ -2,13 +2,12 @@
 
 Shortens a LaTeX paper's references until it fits a page count.
 
-The tool compiles the paper with `latexmk`, then applies increasingly aggressive,
-information-reducing cleanups to the cited references — recompiling after each step and stopping as
-soon as the target page count is reached:
+The tool compiles the paper with `latexmk`, then applies cleanups to the cited references —
+recompiling after each step and stopping as soon as the target page count is reached:
 
-1. **Author lists** → first author + "et al."
-2. **Journal names** → standard abbreviations ([JabRef](https://www.jabref.org/)'s bundled list)
-3. **DOIs** → normalized (no `https://doi.org/` prefixes)
+1. **DOIs** → normalized (no `https://doi.org/` prefixes) — a cleanup any nice paper wants anyway
+2. **Author lists** → first author + "et al."
+3. **Journal names** → standard abbreviations ([JabRef](https://www.jabref.org/)'s bundled list)
 
 The referenced `.bib` file(s) are rewritten with the *smallest* set of cleanups that reaches the
 target — a paper that already fits is left untouched.

@@ -62,8 +62,8 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 /// Shortens the reference list cited by a LaTeX document until the compiled paper reaches a target
-/// page count. Applies increasingly aggressive, information-reducing cleanups to the cited entries —
-/// first author minification, then journal abbreviation, then DOI normalization — recompiling with
+/// page count. Normalizes DOIs first (a cleanup any well-formed paper wants anyway), then applies
+/// information-reducing cleanups — author minification, then journal abbreviation — recompiling with
 /// latexmk after each and stopping as soon as the target is met. The referenced `.bib` file(s) are
 /// rewritten with the smallest set of cleanups that reaches the target.
 ///
@@ -215,14 +215,17 @@ public class ReferenceShortener implements Callable<Integer> {
     private List<Step> buildSteps(List<LoadedBib> loadedBibs) {
         JournalAbbreviationRepository journalRepository = JournalAbbreviationLoader.loadBuiltInRepository();
         FieldFormatterCleanup minifyAuthors = new FieldFormatterCleanup(StandardField.AUTHOR, new MinifyNameListFormatter());
+        // DOI cleanup runs first: it is a normalization every well-formed paper wants anyway, not an
+        // information-losing trade-off. Author minification (dropping names) has the biggest impact,
+        // so it comes before journal abbreviation, which is left as a last-resort mop-up.
         return List.of(
+                new Step("clean up DOIs",
+                        () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(new DoiCleanup()::cleanup))),
                 new Step("shorten authors to the first author",
                         () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(minifyAuthors::cleanup))),
                 new Step("abbreviate journal names",
                         () -> loadedBibs.forEach(bib -> bib.citedEntries()
-                                .forEach(new AbbreviateJournalCleanup(bib.database(), journalRepository, AbbreviationType.DEFAULT, false)::cleanup))),
-                new Step("clean up DOIs",
-                        () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(new DoiCleanup()::cleanup))));
+                                .forEach(new AbbreviateJournalCleanup(bib.database(), journalRepository, AbbreviationType.DEFAULT, false)::cleanup))));
     }
 
     private Integer report(Path workDir, List<LoadedBib> loadedBibs, Result result) throws AbortException {
