@@ -10,16 +10,18 @@ jobs:
     name: Lint CHANGELOG (heylogs)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: jbangdev/setup-jbang@main
-      - run: jbang trust add https://github.com/nbbrd/jbang-catalog/
-      - run: jbang heylogs@nbbrd check -v semver CHANGELOG.md
+      - uses: actions/checkout@v7
+      - uses: jbangdev/jbang-action@v0.141.0
+        with:
+          trust: https://github.com/nbbrd/jbang-catalog/
+          script: heylogs@nbbrd
+          scriptargs: check -v semver CHANGELOG.md
 
   smoke:
     name: Smoke test (JVM)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: jbangdev/setup-jbang@main
       - name: Install a minimal TeX distribution
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends latexmk texlive-latex-base
