@@ -18,7 +18,7 @@
 //DEPS info.picocli:picocli-codegen:4.7.7
 //COMPILE_OPTIONS -proc:full
 
-//NATIVE_OPTIONS --no-fallback -H:IncludeResources=journals/.*|tinylog.properties
+//NATIVE_OPTIONS --no-fallback --enable-url-protocols=https -H:IncludeResources=journals/.*|tinylog.properties
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +41,7 @@ import org.jabref.logic.cleanup.DoiCleanup;
 import org.jabref.logic.cleanup.FieldFormatterCleanup;
 import org.jabref.logic.exporter.AtomicFileWriter;
 import org.jabref.logic.exporter.BibDatabaseWriter;
+import org.jabref.logic.formatter.bibtexfields.ShortenDOIFormatter;
 import org.jabref.logic.formatter.minifier.MinifyNameListFormatter;
 import org.jabref.logic.importer.ParserResult;
 import org.jabref.logic.importer.fileformat.BibtexImporter;
@@ -68,6 +69,7 @@ import picocli.CommandLine.Parameters;
 /// 1. Normalize DOIs — a cleanup any well-formed paper wants anyway, not an information-losing trade-off.
 /// 2. Minify author lists to the first author ("et al.").
 /// 3. Abbreviate journal names.
+/// 4. Shorten DOIs to their `10/xxx` form (via shortdoi.org, needs the network) — the very last resort, since not everyone likes short DOIs.
 ///
 /// The referenced `.bib` file(s) are rewritten with the smallest set of cleanups that reaches the target.
 ///
@@ -219,9 +221,11 @@ public class ReferenceShortener implements Callable<Integer> {
     private List<Step> buildSteps(List<LoadedBib> loadedBibs) {
         JournalAbbreviationRepository journalRepository = JournalAbbreviationLoader.loadBuiltInRepository();
         FieldFormatterCleanup minifyAuthors = new FieldFormatterCleanup(StandardField.AUTHOR, new MinifyNameListFormatter());
-        // DOI cleanup runs first: it is a normalization every well-formed paper wants anyway, not an
-        // information-losing trade-off. Author minification (dropping names) has the biggest impact,
-        // so it comes before journal abbreviation, which is left as a last-resort mop-up.
+        FieldFormatterCleanup shortenDois = new FieldFormatterCleanup(StandardField.DOI, new ShortenDOIFormatter());
+        // DOI normalization first: it belongs in any well-formed paper, not an information-losing
+        // trade-off. Then the page reducers — author minification (biggest impact), then journal
+        // abbreviation. DOI shortening (the 10/xxx form) is the very last resort: it needs the network
+        // and not everyone likes short DOIs, so it only runs if nothing else reached the target.
         return List.of(
                 new Step("clean up DOIs",
                         () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(new DoiCleanup()::cleanup))),
@@ -229,7 +233,21 @@ public class ReferenceShortener implements Callable<Integer> {
                         () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(minifyAuthors::cleanup))),
                 new Step("abbreviate journal names",
                         () -> loadedBibs.forEach(bib -> bib.citedEntries()
-                                .forEach(new AbbreviateJournalCleanup(bib.database(), journalRepository, AbbreviationType.DEFAULT, false)::cleanup))));
+                                .forEach(new AbbreviateJournalCleanup(bib.database(), journalRepository, AbbreviationType.DEFAULT, false)::cleanup))),
+                new Step("shorten DOIs to the short form",
+                        () -> shortenDoisQuietly(shortenDois, loadedBibs)));
+    }
+
+    /// Applies short-DOI shortening, tolerating failure: the short form is fetched from shortdoi.org,
+    /// so if the network is unavailable (offline, service down, or unsupported in a native image) the
+    /// step is skipped rather than failing the whole run. Per-DOI lookup failures are already handled
+    /// inside the formatter (it returns the original); this guards against transport-level errors.
+    private static void shortenDoisQuietly(FieldFormatterCleanup shortenDois, List<LoadedBib> loadedBibs) {
+        try {
+            loadedBibs.forEach(bib -> bib.citedEntries().forEach(shortenDois::cleanup));
+        } catch (Exception e) {
+            System.err.println("Warning: skipped DOI shortening (needs access to shortdoi.org): " + e.getMessage());
+        }
     }
 
     private Integer report(Path workDir, List<LoadedBib> loadedBibs, Result result) throws AbortException {

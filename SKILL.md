@@ -15,6 +15,7 @@ Order:
 1. Normalize DOIs (strip `https://doi.org/` prefixes and similar) — a cleanup any well-formed paper wants anyway
 2. Shorten author lists to the first author + "and others" (rendered as "et al.")
 3. Abbreviate journal names (JabRef's bundled journal-abbreviation list)
+4. Shorten DOIs to the `10/xxx` form via shortdoi.org — the very last resort, since not everyone likes short DOIs
 
 ## Installation
 
@@ -54,6 +55,9 @@ reference-shortener paper.tex --pages 6 --output shortened.bib
 - If the target cannot be reached even after all cleanups, the tool applies its best effort,
   rewrites the `.bib`, reports the achieved page count on stderr, and still exits 0.
 - A paper that already fits is left untouched ("nothing to shorten").
+- Everything runs offline except the last-resort DOI-shortening step, which queries shortdoi.org; it
+  is reached only when author and journal shortening did not suffice, and is skipped gracefully (with
+  a warning) when the network is unavailable.
 - Exit codes: 0 = OK (target reached, best effort, or nothing to do), 2 = usage error
   (bad `--pages`, missing bibliography, `--output` with multiple `.bib` files), 1 = compile or I/O
   failure.

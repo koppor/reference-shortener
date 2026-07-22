@@ -8,6 +8,7 @@ recompiling after each step and stopping as soon as the target page count is rea
 1. **DOIs** → normalized (no `https://doi.org/` prefixes) — a cleanup any nice paper wants anyway
 2. **Author lists** → first author + "et al."
 3. **Journal names** → standard abbreviations ([JabRef](https://www.jabref.org/)'s bundled list)
+4. **DOIs** → shortened to the `10/xxx` form (via [shortdoi.org](https://shortdoi.org/)) — the very last resort, since not everyone likes short DOIs
 
 The referenced `.bib` file(s) are rewritten with the *smallest* set of cleanups that reaches the
 target — a paper that already fits is left untouched.
@@ -19,6 +20,8 @@ Built on [jablib](https://github.com/JabRef/jabref), JabRef's core library.
 - [JBang](https://www.jbang.dev/)
 - A TeX distribution with `latexmk` — or Docker (automatic fallback to the
   [Island of TeX](https://gitlab.com/islandoftex/images/texlive) `texlive/texlive` image)
+- Network access is only needed for the last-resort DOI-shortening step (shortdoi.org); it is
+  skipped gracefully when offline. Everything else runs without a network.
 
 ## Usage
 
