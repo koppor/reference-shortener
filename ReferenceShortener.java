@@ -17,7 +17,7 @@
 // -proc:full is required since JDK 23 disabled implicit annotation processing.
 //DEPS info.picocli:picocli-codegen:4.7.7
 //COMPILE_OPTIONS -proc:full
-// Colored terminal output; bundles jansi but builds and runs fine in the native image.
+// Colored terminal output; bundles jansi — see main() for the jansi/picocli native-image workaround.
 //DEPS com.github.tomas-langer:chalk:1.0.2
 
 //NATIVE_OPTIONS --no-fallback --enable-url-protocols=https -H:IncludeResources=journals/.*|tinylog.properties
@@ -98,9 +98,19 @@ public class ReferenceShortener implements Callable<Integer> {
     private final JabRefCliPreferences preferences = JabRefCliPreferences.getInstance();
 
     public static void main(String[] args) {
+        // chalk pulls in jansi, whose Windows-console native init crashes inside a native image.
+        // "passthrough" makes jansi emit ANSI without touching that native path; it must be set
+        // before any jansi class loads.
+        System.setProperty("jansi.passthrough", "true");
+
         // Chalk does not strip ANSI on its own, so decide here: honor NO_COLOR and only colorize a
         // real terminal (System.console() is null when the output is piped or redirected).
-        Chalk.setColorEnabled(System.getenv("NO_COLOR") == null && System.console() != null);
+        boolean color = System.getenv("NO_COLOR") == null && System.console() != null;
+        Chalk.setColorEnabled(color);
+        // picocli otherwise auto-probes jansi (calcIsJansiConsoleInstalled) for its own help output,
+        // which trips the same native crash. Force its ANSI to our decision so it never probes.
+        System.setProperty("picocli.ansi", Boolean.toString(color));
+
         System.exit(new CommandLine(new ReferenceShortener()).execute(args));
     }
 
