@@ -85,7 +85,7 @@ import picocli.CommandLine.Parameters;
 @Command(name = "reference-shortener",
         mixinStandardHelpOptions = true,
         // a plain version string (not an IVersionProvider) keeps the native image free of extra reflection
-        version = "reference-shortener 0.1.0",
+        version = "reference-shortener 0.2.0",
         description = "Shortens a LaTeX paper's references (via latexmk) until it fits a page count.")
 public class ReferenceShortener implements Callable<Integer> {
 

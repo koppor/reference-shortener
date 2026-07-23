@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-23
+
 ### Added
 
 - Three more cleanups: the `location` field (and its BibTeX equivalent `address`) is cleared first (few styles print it), URLs are cleaned up alongside DOI normalization (redirect wrappers unwrapped, escapes decoded), and the `month` field is removed right after author shortening.
@@ -26,5 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fallback to the Island of TeX `texlive/texlive` Docker image when no local `latexmk` is available.
 - JBang packaging: run via `jbang reference-shortener@koppor/reference-shortener`, or build a native binary with `jbang --native`.
 
-[Unreleased]: https://github.com/koppor/reference-shortener/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/koppor/reference-shortener/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/koppor/reference-shortener/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/koppor/reference-shortener/releases/tag/v0.1.0
