@@ -12,7 +12,7 @@ file(s) are rewritten with the smallest set of cleanups that reaches the target.
 
 Order:
 
-1. Clear the `location` field — few styles print it, so it is the cheapest information to lose
+1. Clear the `location` field (and its BibTeX equivalent `address`) — few styles print it, so it is the cheapest information to lose
 2. Normalize DOIs (strip `https://doi.org/` prefixes and similar) — a cleanup any well-formed paper wants anyway
 3. Clean up URLs (unwrap redirect wrappers such as `google.de/url?...&url=...`, decode escapes) — likewise
 4. Shorten author lists to the first author + "and others" (rendered as "et al.")

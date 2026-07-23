@@ -20,6 +20,7 @@ for i in $(seq 1 10); do
   title    = {A Study of Topic Number $i in Considerable Depth},
   journal  = {Journal of the American Chemical Society},
   location = {Nowhere Town, Some Province, Country},
+  address  = {Old City, Faraway Land},
   month    = {jan},
   url      = {https://www.google.de/url?sa=t&url=https%3A%2F%2Fexample.org%2Fpaper$i&usg=AOvVaw1},
   year     = {200$((i % 10))},
@@ -52,6 +53,7 @@ echo "$OUT"
 echo "$OUT" | grep -q "applying" || { echo "FAIL: no steps were applied"; exit 1; }
 grep -q "and others" "$WORK/refs.bib" || { echo "FAIL: authors were not minified in refs.bib"; exit 1; }
 ! grep -q "location" "$WORK/refs.bib" || { echo "FAIL: location was not cleared in refs.bib"; exit 1; }
+! grep -q "address" "$WORK/refs.bib" || { echo "FAIL: address was not cleared in refs.bib"; exit 1; }
 ! grep -q "month" "$WORK/refs.bib" || { echo "FAIL: month was not removed from refs.bib"; exit 1; }
 ! grep -q "google" "$WORK/refs.bib" || { echo "FAIL: URL redirect wrapper survived in refs.bib"; exit 1; }
 grep -q "https://example.org/paper1" "$WORK/refs.bib" || { echo "FAIL: unwrapped URL missing from refs.bib"; exit 1; }

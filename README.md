@@ -5,7 +5,7 @@ Shortens a LaTeX paper's references until it fits a page count.
 The tool compiles the paper with `latexmk`, then applies cleanups to the cited references —
 recompiling after each step and stopping as soon as the target page count is reached:
 
-1. **`location`** → cleared — few styles print it, so it is the cheapest information to lose
+1. **`location`** (and BibTeX **`address`**) → cleared — few styles print it, so it is the cheapest information to lose
 2. **DOIs** → normalized (no `https://doi.org/` prefixes) — a cleanup any nice paper wants anyway
 3. **URLs** → cleaned up (redirect wrappers unwrapped, escapes decoded) — likewise
 4. **Author lists** → first author + "et al."

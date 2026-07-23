@@ -71,7 +71,7 @@ import picocli.CommandLine.Parameters;
 /// page count, recompiling with latexmk after each cleanup and stopping as soon as the target is met.
 /// Cleanups are applied in this order:
 ///
-/// 1. Clear the `location` field — few styles print it, so it is the cheapest information to lose.
+/// 1. Clear the `location` field (and its BibTeX equivalent `address`) — few styles print it, so it is the cheapest information to lose.
 /// 2. Normalize DOIs — a cleanup any well-formed paper wants anyway, not an information-losing trade-off.
 /// 3. Clean up URLs — unwrap redirect wrappers and decode escapes; also a cleanup any paper wants.
 /// 4. Minify author lists to the first author ("et al.").
@@ -241,20 +241,25 @@ public class ReferenceShortener implements Callable<Integer> {
 
     private List<Step> buildSteps(List<LoadedBib> loadedBibs) {
         JournalAbbreviationRepository journalRepository = JournalAbbreviationLoader.loadBuiltInRepository();
+        // `location` is the biblatex field; `address` is its BibTeX equivalent — clear whichever is present.
         FieldFormatterCleanup clearLocation = new FieldFormatterCleanup(StandardField.LOCATION, new ClearFormatter());
+        FieldFormatterCleanup clearAddress = new FieldFormatterCleanup(StandardField.ADDRESS, new ClearFormatter());
         FieldFormatterCleanup cleanupUrls = new FieldFormatterCleanup(StandardField.URL, new CleanupUrlFormatter());
         FieldFormatterCleanup minifyAuthors = new FieldFormatterCleanup(StandardField.AUTHOR, new MinifyNameListFormatter());
         FieldFormatterCleanup clearMonth = new FieldFormatterCleanup(StandardField.MONTH, new ClearFormatter());
         FieldFormatterCleanup shortenDois = new FieldFormatterCleanup(StandardField.DOI, new ShortenDOIFormatter());
         // Position = precedence: the loop stops at the first step that reaches the target, so the
-        // least painful losses come first. `location` goes right away (few styles print it), followed
-        // by the normalizations any well-formed paper wants anyway (DOI, URL). Author minification is
-        // the biggest single reducer; `month` is the next-cheapest drop, then journal abbreviation.
-        // DOI shortening (the 10/xxx form) is the very last resort: it needs the network and not
-        // everyone likes short DOIs, so it only runs if nothing else reached the target.
+        // least painful losses come first. The location/address goes right away (few styles print it),
+        // followed by the normalizations any well-formed paper wants anyway (DOI, URL). Author
+        // minification is the biggest single reducer; `month` is the next-cheapest drop, then journal
+        // abbreviation. DOI shortening (the 10/xxx form) is the very last resort: it needs the network
+        // and not everyone likes short DOIs, so it only runs if nothing else reached the target.
         return List.of(
                 new Step("clear the location field",
-                        () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(clearLocation::cleanup))),
+                        () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(entry -> {
+                            clearLocation.cleanup(entry);
+                            clearAddress.cleanup(entry);
+                        }))),
                 new Step("clean up DOIs",
                         () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(new DoiCleanup()::cleanup))),
                 new Step("clean up URLs",
