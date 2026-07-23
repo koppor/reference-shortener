@@ -12,10 +12,13 @@ file(s) are rewritten with the smallest set of cleanups that reaches the target.
 
 Order:
 
-1. Normalize DOIs (strip `https://doi.org/` prefixes and similar) — a cleanup any well-formed paper wants anyway
-2. Shorten author lists to the first author + "and others" (rendered as "et al.")
-3. Abbreviate journal names (JabRef's bundled journal-abbreviation list)
-4. Shorten DOIs to the `10/xxx` form via shortdoi.org — the very last resort, since not everyone likes short DOIs
+1. Clear the `location` field — few styles print it, so it is the cheapest information to lose
+2. Normalize DOIs (strip `https://doi.org/` prefixes and similar) — a cleanup any well-formed paper wants anyway
+3. Clean up URLs (unwrap redirect wrappers such as `google.de/url?...&url=...`, decode escapes) — likewise
+4. Shorten author lists to the first author + "and others" (rendered as "et al.")
+5. Remove the `month` field
+6. Abbreviate journal names (JabRef's bundled journal-abbreviation list)
+7. Shorten DOIs to the `10/xxx` form via shortdoi.org — the very last resort, since not everyone likes short DOIs
 
 ## Installation
 

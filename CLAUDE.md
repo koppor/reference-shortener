@@ -38,7 +38,8 @@ consistent:
 `runShortener(...)` applies the steps in order and **stops at the first one that reaches the
 target**, so position = precedence. Insert by this rule of thumb:
 
-- **Non-destructive normalizations** that belong in any paper → **first** (e.g. DOI normalization).
+- **Cheap losses** — fields most styles barely print (`location`, `month`) — and **non-destructive
+  normalizations** that belong in any paper (DOI, URL cleanup) → **first**.
 - **Page reducers, biggest impact first** (author minification, then journal abbreviation) — reaching
   the target with one big step preserves more of the other fields.
 - **Anything users might dislike, or that is networked/slow** → **last resort** (e.g. DOI shortening

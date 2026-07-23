@@ -16,10 +16,13 @@ trap 'rm -rf "$WORK"' EXIT
 for i in $(seq 1 10); do
   cat >> "$WORK/refs.bib" <<EOF
 @article{key$i,
-  author  = {Alpha$i, Anna and Beta$i, Bob and Gamma$i, Carol and Delta$i, Dan and Epsilon$i, Eve},
-  title   = {A Study of Topic Number $i in Considerable Depth},
-  journal = {Journal of the American Chemical Society},
-  year    = {200$((i % 10))},
+  author   = {Alpha$i, Anna and Beta$i, Bob and Gamma$i, Carol and Delta$i, Dan and Epsilon$i, Eve},
+  title    = {A Study of Topic Number $i in Considerable Depth},
+  journal  = {Journal of the American Chemical Society},
+  location = {Nowhere Town, Some Province, Country},
+  month    = {jan},
+  url      = {https://www.google.de/url?sa=t&url=https%3A%2F%2Fexample.org%2Fpaper$i&usg=AOvVaw1},
+  year     = {200$((i % 10))},
 }
 EOF
 done
@@ -48,6 +51,10 @@ OUT=$(jbang ReferenceShortener.java "$WORK/paper.tex" --pages 1 2>&1)
 echo "$OUT"
 echo "$OUT" | grep -q "applying" || { echo "FAIL: no steps were applied"; exit 1; }
 grep -q "and others" "$WORK/refs.bib" || { echo "FAIL: authors were not minified in refs.bib"; exit 1; }
+! grep -q "location" "$WORK/refs.bib" || { echo "FAIL: location was not cleared in refs.bib"; exit 1; }
+! grep -q "month" "$WORK/refs.bib" || { echo "FAIL: month was not removed from refs.bib"; exit 1; }
+! grep -q "google" "$WORK/refs.bib" || { echo "FAIL: URL redirect wrapper survived in refs.bib"; exit 1; }
+grep -q "https://example.org/paper1" "$WORK/refs.bib" || { echo "FAIL: unwrapped URL missing from refs.bib"; exit 1; }
 echo "OK: escalation pipeline ran and rewrote refs.bib"
 
 echo "SMOKE TEST PASSED"

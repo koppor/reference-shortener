@@ -43,6 +43,8 @@ import org.jabref.logic.cleanup.DoiCleanup;
 import org.jabref.logic.cleanup.FieldFormatterCleanup;
 import org.jabref.logic.exporter.AtomicFileWriter;
 import org.jabref.logic.exporter.BibDatabaseWriter;
+import org.jabref.logic.formatter.bibtexfields.CleanupUrlFormatter;
+import org.jabref.logic.formatter.bibtexfields.ClearFormatter;
 import org.jabref.logic.formatter.bibtexfields.ShortenDOIFormatter;
 import org.jabref.logic.formatter.minifier.MinifyNameListFormatter;
 import org.jabref.logic.importer.ParserResult;
@@ -69,10 +71,13 @@ import picocli.CommandLine.Parameters;
 /// page count, recompiling with latexmk after each cleanup and stopping as soon as the target is met.
 /// Cleanups are applied in this order:
 ///
-/// 1. Normalize DOIs — a cleanup any well-formed paper wants anyway, not an information-losing trade-off.
-/// 2. Minify author lists to the first author ("et al.").
-/// 3. Abbreviate journal names.
-/// 4. Shorten DOIs to their `10/xxx` form (via shortdoi.org, needs the network) — the very last resort, since not everyone likes short DOIs.
+/// 1. Clear the `location` field — few styles print it, so it is the cheapest information to lose.
+/// 2. Normalize DOIs — a cleanup any well-formed paper wants anyway, not an information-losing trade-off.
+/// 3. Clean up URLs — unwrap redirect wrappers and decode escapes; also a cleanup any paper wants.
+/// 4. Minify author lists to the first author ("et al.").
+/// 5. Clear the `month` field.
+/// 6. Abbreviate journal names.
+/// 7. Shorten DOIs to their `10/xxx` form (via shortdoi.org, needs the network) — the very last resort, since not everyone likes short DOIs.
 ///
 /// The referenced `.bib` file(s) are rewritten with the smallest set of cleanups that reaches the target.
 ///
@@ -236,17 +241,28 @@ public class ReferenceShortener implements Callable<Integer> {
 
     private List<Step> buildSteps(List<LoadedBib> loadedBibs) {
         JournalAbbreviationRepository journalRepository = JournalAbbreviationLoader.loadBuiltInRepository();
+        FieldFormatterCleanup clearLocation = new FieldFormatterCleanup(StandardField.LOCATION, new ClearFormatter());
+        FieldFormatterCleanup cleanupUrls = new FieldFormatterCleanup(StandardField.URL, new CleanupUrlFormatter());
         FieldFormatterCleanup minifyAuthors = new FieldFormatterCleanup(StandardField.AUTHOR, new MinifyNameListFormatter());
+        FieldFormatterCleanup clearMonth = new FieldFormatterCleanup(StandardField.MONTH, new ClearFormatter());
         FieldFormatterCleanup shortenDois = new FieldFormatterCleanup(StandardField.DOI, new ShortenDOIFormatter());
-        // DOI normalization first: it belongs in any well-formed paper, not an information-losing
-        // trade-off. Then the page reducers — author minification (biggest impact), then journal
-        // abbreviation. DOI shortening (the 10/xxx form) is the very last resort: it needs the network
-        // and not everyone likes short DOIs, so it only runs if nothing else reached the target.
+        // Position = precedence: the loop stops at the first step that reaches the target, so the
+        // least painful losses come first. `location` goes right away (few styles print it), followed
+        // by the normalizations any well-formed paper wants anyway (DOI, URL). Author minification is
+        // the biggest single reducer; `month` is the next-cheapest drop, then journal abbreviation.
+        // DOI shortening (the 10/xxx form) is the very last resort: it needs the network and not
+        // everyone likes short DOIs, so it only runs if nothing else reached the target.
         return List.of(
+                new Step("clear the location field",
+                        () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(clearLocation::cleanup))),
                 new Step("clean up DOIs",
                         () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(new DoiCleanup()::cleanup))),
+                new Step("clean up URLs",
+                        () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(cleanupUrls::cleanup))),
                 new Step("shorten authors to the first author",
                         () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(minifyAuthors::cleanup))),
+                new Step("remove the month field",
+                        () -> loadedBibs.forEach(bib -> bib.citedEntries().forEach(clearMonth::cleanup))),
                 new Step("abbreviate journal names",
                         () -> loadedBibs.forEach(bib -> bib.citedEntries()
                                 .forEach(new AbbreviateJournalCleanup(bib.database(), journalRepository, AbbreviationType.DEFAULT, false)::cleanup))),
